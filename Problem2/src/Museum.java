@@ -27,161 +27,214 @@
 
 ******************************************************************************/
 
-
-import java.lang.*;
 import java.util.*;
-import java.util.concurrent.Semaphore;
 
-class Person extends Thread{
-    private int me;
-    private Semaphore s45Sem, s20aSem,  s40Sem, s20bSem, s30Sem;
-    private static int numIn45, numIn20a, numIn40, numIn20b, numIn30;
+class Room {
+    public static class EntryPoint {
+        public final Room room;
+        public final int doorN;
+        public EntryPoint(Room room, int doorN) {
+            this.room = room;
+            this.doorN = doorN;
+        }
+    }
+
+    private static class BST<T extends Comparable<T>, E> {
+        private int size;
+        private T key;
+        private E data;
+        private BST<T, E> left, right;
+
+        public boolean isEmpty() { return data==null; }
+        public int size() { return size; }
+        public E get(T key) {
+            if (isEmpty())  return null;
+            if (key.compareTo(this.key)==0)  return data;
+            if (key.compareTo(this.key) <0)  return (left==null)? null : left.get(key);
+            if (key.compareTo(this.key) >0)  return (right==null)? null : right.get(key);
+            return null;
+        }
+        public boolean put(T key, E element) {
+            if (isEmpty()) { this.key = key; this.data = element; size++; return true; }
+            if (key.compareTo(this.key)==0)  { this.data = element; return false; }
+            if (key.compareTo(this.key) <0)  {
+                if (left==null)  left = new BST<T, E>();
+                boolean ch = left.put(key, element);
+                if (ch)  size++;
+                return ch;
+            }
+            if (key.compareTo(this.key) >0) {
+                if (right==null)  right = new BST<T, E>();
+                boolean ch = right.put(key, element);
+                if (ch)  size++;
+                return ch;
+            }
+            return false;
+        }
+    }
+
+    public String name;
+    private final int cap;
+    private int total;
 
 
-    private Semaphore mutex45, mutex20a, mutex40, mutex20b, mutex30;
-    private Random rnd = new Random();
+    private BST<Integer, Integer> pools = new BST<Integer, Integer>();
+
+    public Room(int cap) { this(cap, Integer.toString(cap)); }
+    public Room(int cap, String name) {
+        this.cap = cap;
+        this.name = name;
+    }
     
-    Person(int me, Semaphore s45Sem, Semaphore s20aSem, Semaphore s40Sem,
-	   Semaphore s20bSem, Semaphore s30Sem, Semaphore mutex45,
-	   Semaphore mutex20a, Semaphore mutex40, Semaphore mutex20b,
-	   Semaphore mutex30){
-	this.s45Sem = s45Sem;
-	this.s20aSem = s20aSem;
-	this.s40Sem = s40Sem;
-	this.s20bSem = s20bSem;
-	this.s30Sem = s30Sem;
-	this.mutex45 = mutex45;
-	this.mutex20a = mutex20a;
-	this.mutex40 = mutex40;
-	this.mutex20b = mutex20b;
-	this.mutex30 = mutex30;
-	this.me =me;
+    private synchronized int addPool(int id) {
+        int poolN = pools.size();
+        int poolSize = (cap-1)/(poolN+1);
+        System.out.printf("[R%s ] Adding pool (%d pools, size %d)\n", name, poolN+1, poolSize);
+        if (poolN == 0) {
+            pools.put(id, (cap-1));
+            return cap;
+        }
+        
+        int delta = poolSize-cap/poolN;
+        for (int i=0; i<pools.size(); i++) {
+            pools.put(i, pools.get(i)+delta);
+        }
+        pools.put(id, poolSize);
+        return pools.get(id);
     }
-
-
-    private void room45in(int time){
-	numIn45++;
-
-	if (time == 2){
-	    numIn20a--;
-	}
-
-	System.out.println("[ "+ me +" ] I am inside room 45 "+ time+ " time. There is "
-			   + numIn45  + " people");
+    protected synchronized int getPool(int id) {
+        Integer pool = pools.get(id);
+        if (pool == null)  pool = addPool(id);
+        return pool;
     }
+    public int getTotal() { return total; }
     
-
-    private void room20ain(){
-	numIn20a++;
-	numIn45--;
-	System.out.println("[ "+ me +" ] I am inside room 20a. There is "
-			   + numIn20a + " people");
+    public synchronized boolean tryEnter(int poolID) {
+        int pool = getPool(poolID);
+        if (pool>0 && total < cap) {
+            pools.put(poolID, --pool);
+            total++;
+            notifyAll();
+            return true;
+        }
+        return false;
+    }
+    public synchronized void enter(int poolID) {
+        int pool = getPool(poolID);
+        while (pool<=0 || total > cap) {
+            try { wait(); } catch (InterruptedException e) {}
+        }
+        pools.put(poolID, --pool);
+        total++;
+        notifyAll();
     }
 
-
-    private void room40in(int time){
-	numIn40++;
-	
-	if (time == 1){
-	    numIn45--;
-	}
-
-	if (time == 2){
-	    numIn20b--;
-	}
-
-	System.out.println("[ "+ me +" ] I am inside room 40 "+ time+ " time. There is "
-			   + numIn40 + " people");
-    }
-
-
-    private void room20bin(){
-	numIn20b++;
-	numIn40--;
-	System.out.println("[ "+ me +" ] I am inside room 20b. There is "
-			   + numIn20b + " people");
-    }
-
-    private void room30in(){
-	numIn30++;
-	numIn40--;
-	System.out.println("[ "+ me +" ] I am inside room 30. There is "
-			   + numIn30 + " people");
-    }
-
-    private void room30out(){
-	numIn30--;
-    }
-
-    public void run(){
-	System.out.println("[ "+ me +" ] Trying to enter");
-
-	room45in(1);
-	try {
-	    Thread.sleep(rnd.nextInt(1000));
-	} catch (Exception e) {}
-
-	room20ain();
-	try {
-	    Thread.sleep(rnd.nextInt(1000));
-	} catch (Exception e) {}
-
-	room45in(2);
-	try {
-	    Thread.sleep(rnd.nextInt(1000));
-	} catch (Exception e) {}
-
-	room40in(1);
-	try {
-	    Thread.sleep(rnd.nextInt(1000));
-	} catch (Exception e) {}
-		
-	room20bin();
-	try {
-	    Thread.sleep(rnd.nextInt(1000));
-	} catch (Exception e) {}
-		
-	room40in(2);
-	try {
-	    Thread.sleep(rnd.nextInt(1000));
-	} catch (Exception e) {}
-
-	room30in();
-	
-	try {
-	    Thread.sleep(rnd.nextInt(1000));
-	} catch (Exception e) {}
-
-	room30out();
-
-	System.out.println("[ "+ me +" ] Outside the museum");
+    public synchronized void exit() { exit(0); }
+    public synchronized void exit(int poolID) {
+        if (pools.get(poolID)==null)  throw new IllegalArgumentException("Invalid pool ID " + poolID);
+        pools.put(poolID, pools.get(poolID)+1);
+        total--;
     }
 }
 
-public class Museum{
+
+class MuseumMap extends ArrayList<Room.EntryPoint> {
+    public boolean add(Room room, int doorN) {
+        return add(new Room.EntryPoint(room, doorN));
+    }
+}
+
+
+class Person extends Thread {
+    
+    static class PersonalMap {
+        final MuseumMap referenceMap;
+        private int index;
+        private Room.EntryPoint currEntryPoint;
+
+        public PersonalMap(MuseumMap referenceMap) {
+            this.referenceMap = referenceMap;
+        }
+
+        public Room.EntryPoint getNext() {
+            if (currEntryPoint!=null)  index++;
+            return currEntryPoint = (index < referenceMap.size())? referenceMap.get(index) : null;
+        }
+    }
+
+    private int id;
+    private PersonalMap map;
+    private Room.EntryPoint curr;
+
+    private Random rnd = new Random();
+
+    Person(int id, MuseumMap map) {
+        this.id = id;
+        this.map = new PersonalMap(map);
+    }
+
+    private Room.EntryPoint advance() {
+        moveTo(map.getNext());
+        return curr;
+    }
+
+    private void moveTo(Room.EntryPoint entryPoint) {
+        if (entryPoint == null)  moveTo(null, 0);
+        else moveTo(entryPoint.room, entryPoint.doorN);
+    }
+    private void moveTo(Room room) { moveTo(room, 0); }
+    private void moveTo(Room room, int door) {
+        if (room != null) {
+            System.out.printf("[ %d ] Trying to enter room %s in pool %d\n", id, room.name, door);
+            synchronized(room) {
+                while (!room.tryEnter(door)) {
+                    try { room.wait(); } catch (InterruptedException e) {}
+                }
+                System.out.printf("[ %d ] Entering room %s. (%d people, %d spaces in pool)\n", id, room.name, room.getTotal(), room.getPool(door));
+            }
+        }
+        if (curr!=null) {
+            synchronized(curr.room){
+                curr.room.exit(curr.doorN);
+                System.out.printf("[ %d ] Leaving room %s. (%d poeple, %d spaces in pool)\n", id, curr.room.name, curr.room.getTotal(), curr.room.getPool(curr.doorN));
+            }
+        }
+        curr = (room==null)? null : new Room.EntryPoint(room, door);
+    }
+
+    public void run(){
+        System.out.println("[ "+ id +" ] At museum door");
+
+        while (advance() != null) {
+            try { Thread.sleep(rnd.nextInt(1000)); } catch (InterruptedException e) {}
+        }
+
+        System.out.printf("[ %d ] Finished the museum visit\n", id);
+    }
+}
+
+public class Museum {
 
     public static void main(String[] args){
 
-	Person p;
-	Semaphore s45Sem, s20aSem, s40Sem, s20bSem, s30Sem;
-	Semaphore mutex45, mutex20a, mutex40, mutex20b, mutex30;
-	
-	s45Sem = new Semaphore(45);
-	s20aSem = new Semaphore(20);
-	s40Sem = new Semaphore(40);
-	s20bSem = new Semaphore(20);
-	s30Sem = new Semaphore(30);
-	
-	mutex45 = new Semaphore(1);
-	mutex20a = new Semaphore(1);
-	mutex40 = new Semaphore(1);
-	mutex20b = new Semaphore(1);
-	mutex30 = new Semaphore(1);
-		
-	for (int i=0; i < 200; i++){
-	    p = new Person(i, s45Sem, s20aSem, s40Sem, s20bSem, s30Sem,
-			   mutex45, mutex20a, mutex40, mutex20b, mutex30);
-	    p.start();
-	}
+        Room r45 = new Room(45);
+        Room r20a = new Room(20, "20a");
+        Room r40 = new Room(40);
+        Room r20b = new Room(20, "20b");
+        Room r30 = new Room(30);
+
+        MuseumMap museumMap = new MuseumMap();
+        museumMap.add(r45, 0);
+        museumMap.add(r20a, 0);
+        museumMap.add(r45, 1);
+        museumMap.add(r40, 0);
+        museumMap.add(r20b, 0);
+        museumMap.add(r40, 1);
+        museumMap.add(r30, 0);
+
+        
+        for (int i=0; i < 100; i++){
+            new Person(i, museumMap).start();
+        }
     }
 }
