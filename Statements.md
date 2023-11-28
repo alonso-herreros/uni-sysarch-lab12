@@ -28,10 +28,22 @@ wait until the end of Christmas) and he will go with the reindeers to distribute
 In this activity we will manage a museum with rooms of different capacity, using capacity and mutex
 semaphores.
 
-In a museum there is a synchronization problem. In the following figure you can find the map of the museum,
+In a museum there is a synchronization problem. In the following [figure](museum_map.png) you can find the map of the museum,
 the capacity of each room, and the route that the visitors should follow.
 
-![Museum map](museum_map.png)
+```mermaid
+flowchart LR
+    Entrance ---> R45["\n\n&emsp;&emsp;Cap: 45"]
+    subgraph Museum
+        R45 --1--> R20a["\n\n&emsp;&emsp;Cap: 20"]
+        R20a --> R45
+        R45 --2--> R40["\n\n&emsp;&emsp;Cap: 40"]
+        R40 --1--> R20b["\n\n&emsp;&emsp;Cap: 20"]
+        R20b --> R40
+        R40 --2--> R30["\n\n&emsp;&emsp;Cap: 30"]
+    end
+    R30 --> Exit
+```
 
 Download the file [`Museum.java`][Museum_file] from [Aula Global][AG_folder].
 
