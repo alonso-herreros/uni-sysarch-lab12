@@ -2,7 +2,7 @@
 
 # **Laboratory Session 12**
 
-_Academic year 2023-2024_
+_Academic year 2023-2024_  
 _Telematics Engineering Department - Universidad Carlos III de Madrid_
 
 ---
