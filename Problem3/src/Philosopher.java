@@ -7,6 +7,8 @@
 
   Author      [Iria Estevez-Ayres <ayres@it.uc3m.es>]
 
+  Solution    [Alonso Herreros Copete <alonso.herreros@alumnos.uc3m.es>]
+
   Copyright   [Copyright (c) 2015 Carlos III University of Madrid
   All rights reserved.
 
