@@ -1,3 +1,4 @@
+
 /**JavaFile******************************************************************
 
   FileName    [Program that implements the Philosophers Paradigm]
@@ -32,60 +33,68 @@
 
 import java.util.concurrent.Semaphore;
 
-public class Philosopher extends Thread{
+public class Philosopher extends Thread {
 
-    private Semaphore palillo1;
-    private Semaphore palillo2;
+    private Semaphore chopstick1;
+    private Semaphore chopstick2;
     private int id;
 
-    public Philosopher(int id, Semaphore palillo1, Semaphore palillo2){
-	this.id = id;
-	this.palillo1 = palillo1;
-	this.palillo2 = palillo2;
+    public Philosopher(int id, Semaphore chopstick1, Semaphore chopstick2) {
+        this.id = id;
+        this.chopstick1 = chopstick1;
+        this.chopstick2 = chopstick2;
     }
 
-    public void comer(){
-	try{
-	    palillo1.acquire();
-	}catch (Exception e){};
+    public void eat(){ 
+        try {
+            chopstick1.acquire();
+        } catch (Exception e) {
+        }
+        ;
 
-	// Fuerzo el deadlock para que se vea 
-	try{
-	     Thread.sleep(this.id); // duerme un número de segundos dependiendo
-	    // de su identificador
-	 }catch (Exception e){};
+        // Fuerzo el deadlock para que se vea
+        try {
+            Thread.sleep(this.id); // duerme un número de segundos dependiendo
+            // de su identificador
+        } catch (Exception e) {
+        }
+        ;
 
-	try{
-	    palillo2.acquire();
-	}catch (Exception e){};
+        try {
+            chopstick2.acquire();
+        } catch (Exception e) {
+        }
+        ;
 
-	System.out.println("Soy el filosofo "+id+"y estoy comiendo");
+        System.out.println("Soy el filosofo " + id + "y estoy comiendo");
     }
-    public void termino_de_comer(){
-	palillo2.release();
-	palillo1.release();
+
+    public void finish_eating(){ 
+        chopstick2.release();
+        chopstick1.release();
     }
-    public void run(){
-	this.comer();
 
+    public void run() {
+        this.eat();
 
-	this.termino_de_comer();
+        this.finish_eating();
     }
-    public static void main(String[] args){
 
-	Philosopher f1,f2,f3,f4;
-	Semaphore palilloA,palilloB,palilloC,palilloD;
-	palilloA = new Semaphore(1);
-	palilloB = new Semaphore(1);
-	palilloC = new Semaphore(1);
-	palilloD = new Semaphore(1);
-	f1= new Philosopher(1,palilloA,palilloB);
-	f2= new Philosopher(2,palilloB,palilloC);
-	f3= new Philosopher(3,palilloC,palilloD);
-	f4= new Philosopher(4,palilloD,palilloA); 
-	f4.start();
-	f1.start();
-	f3.start();
-	f2.start();
+    public static void main(String[] args) {
+
+        Philosopher f1, f2, f3, f4;
+        Semaphore chopstickA, chopstickB, chopstickC, chopstickD;
+        chopstickA = new Semaphore(1);
+        chopstickB = new Semaphore(1);
+        chopstickC = new Semaphore(1);
+        chopstickD = new Semaphore(1);
+        f1 = new Philosopher(1, chopstickA, chopstickB);
+        f2 = new Philosopher(2, chopstickB, chopstickC);
+        f3 = new Philosopher(3, chopstickC, chopstickD);
+        f4 = new Philosopher(4, chopstickD, chopstickA);
+        f4.start();
+        f1.start();
+        f3.start();
+        f2.start();
     }
 }
