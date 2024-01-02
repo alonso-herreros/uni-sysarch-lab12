@@ -91,7 +91,7 @@ public class Philosopher extends Thread {
         f1 = new Philosopher(1, chopstickA, chopstickB);
         f2 = new Philosopher(2, chopstickB, chopstickC);
         f3 = new Philosopher(3, chopstickC, chopstickD);
-        f4 = new Philosopher(4, chopstickD, chopstickA);
+        f4 = new Philosopher(4, chopstickA, chopstickD);
         f4.start();
         f1.start();
         f3.start();
