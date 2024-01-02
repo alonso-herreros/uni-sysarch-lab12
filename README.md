@@ -18,7 +18,7 @@
 
 | Problem | Status | Comment
 | --- | :---: | --- |
-| [Problem 1][i1] | - | |
+| [Problem 1][i1] | Done | |
 | [Problem 2][i2] | - | |
 | [Problem 3][i3] | - | |
 
