@@ -19,7 +19,7 @@
 | Problem | Status | Comment
 | --- | :---: | --- |
 | [Problem 1][i1] | Done | |
-| [Problem 2][i2] | - | |
+| [Problem 2][i2] | Done | Works when running on command line, not with integrated code runner |
 | [Problem 3][i3] | - | |
 
 [i1]: https://github.com/alonso-herreros/uni-sysarch-lab12/issues/1
