@@ -20,7 +20,7 @@
 | --- | :---: | --- |
 | [Problem 1][i1] | Done | |
 | [Problem 2][i2] | Done | Works when running on command line, not with integrated code runner |
-| [Problem 3][i3] | - | |
+| [Problem 3][i3] | Done | |
 
 [i1]: https://github.com/alonso-herreros/uni-sysarch-lab12/issues/1
 [i2]: https://github.com/alonso-herreros/uni-sysarch-lab12/issues/2
